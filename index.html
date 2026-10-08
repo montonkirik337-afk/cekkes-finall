@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CekKes - Aplikasi Cek Kesehatan Terpadu</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .tab-active {
+            border-bottom: 3px solid #0284c7;
+            color: #0284c7;
+            font-weight: 600;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- Top Header / Nav -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-sky-600 rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-md shadow-sky-200">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-sky-600 to-teal-600 bg-clip-text text-transparent">CekKes</h1>
+                        <p class="text-xs text-slate-400 font-medium">Cek Kesehatan Mandiri</p>
+                    </div>
+                </div>
+
+                <!-- User Profile Summary (Hidden when logged out) -->
+                <div id="userProfileHeader" class="hidden flex items-center gap-4">
+                    <div class="text-right hidden sm:block">
+                        <p id="navUserName" class="text-sm font-semibold text-slate-700">Nama User</p>
+                        <p id="navUserMeta" class="text-xs text-slate-500">25 Thn • Pria</p>
+                    </div>
+                    <button onclick="logout()" class="px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-from-bracket"></i> Keluar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- LOGIN / PROFIL MODAL CONTAINER -->
+    <div id="loginSection" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-fade-in relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-sky-100 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-sky-100 text-sky-600 rounded-2xl mb-3 shadow-inner">
+                    <i class="fa-solid fa-user-check text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Selamat Datang di CekKes</h2>
+                <p class="text-sm text-slate-500 mt-1">Isi identitas diri Anda untuk memulai seluruh analisis kesehatan.</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Nama Lengkap</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            <i class="fa-regular fa-user"></i>
+                        </span>
+                        <input type="text" id="inputName" required placeholder="Masukkan nama Anda" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:bg-white focus:outline-none transition-all">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Umur (Tahun)</label>
+                        <input type="number" id="inputAge" min="1" max="120" required placeholder="Contoh: 25" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:bg-white focus:outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Jenis Kelamin</label>
+                        <select id="inputGender" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:bg-white focus:outline-none transition-all">
+                            <option value="pria">Laki-Laki</option>
+                            <option value="wanita">Perempuan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full mt-2 py-3 bg-gradient-to-r from-sky-600 to-teal-600 hover:from-sky-700 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/30 transition-all flex items-center justify-center gap-2">
+                    <span>Mulai Pengecekan</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main id="mainContent" class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
+        
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mb-8 p-2 overflow-x-auto scrollbar-none">
+            <nav class="flex space-x-2 min-w-max" aria-label="Tabs">
+                <button onclick="switchTab('tb')" id="tab-tb" class="tab-btn tab-active px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-ruler-vertical"></i> Tinggi Badan Ideal
+                </button>
+                <button onclick="switchTab('bmi')" id="tab-bmi" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-700 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-weight-scale"></i> Berat Badan & BMI
+                </button>
+                <button onclick="switchTab('kalori')" id="tab-kalori" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-700 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-fire-flame-curved"></i> Kalori Harian
+                </button>
+                <button onclick="switchTab('subur')" id="tab-subur" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-700 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-heart"></i> Masa Subur
+                </button>
+                <button onclick="switchTab('mental')" id="tab-mental" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-700 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-brain"></i> Tes Kewarasan Mental
+                </button>
+            </nav>
+        </div>
+
+        <!-- TAB CONTENT 1: TINGGI BADAN IDEAL -->
+        <section id="content-tb" class="tab-content animate-fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-sky-100 text-sky-600 rounded-xl">
+                            <i class="fa-solid fa-ruler-vertical text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Cek Tinggi Badan Ideal</h2>
+                            <p class="text-xs text-slate-500">Estimasi tinggi ideal berdasarkan jenis kelamin & usia</p>
+                        </div>
+                    </div>
+
+                    <form id="formTB" onsubmit="calculateIdealTB(event)" class="space-y-4 mt-6">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tinggi Badan Sekarang (cm)</label>
+                            <input type="number" id="inputTBActual" required min="50" max="250" placeholder="Contoh: 168" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-xl shadow-md transition-all">
+                            Hitung Tinggi Ideal
+                        </button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">Hasil Analisis Tinggi Badan</h3>
+                        <div id="resultTB" class="hidden">
+                            <div class="bg-sky-50 border border-sky-100 rounded-2xl p-6 text-center mb-6">
+                                <p class="text-xs font-medium text-sky-600 mb-1">Rentang Tinggi Badan Ideal Anda</p>
+                                <p id="idealTBRange" class="text-3xl font-extrabold text-sky-900">165 - 175 cm</p>
+                                <p id="tbStatus" class="mt-2 text-sm font-semibold text-sky-700">Tinggi badan Anda dalam rentang normal/ideal!</p>
+                            </div>
+
+                            <div class="space-y-3 text-sm text-slate-600">
+                                <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                                    <span>Tinggi Anda Saat Ini:</span>
+                                    <span id="currentTBVal" class="font-semibold text-slate-800">168 cm</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                                    <span>Kategori Kelompok Usia:</span>
+                                    <span id="ageGroupVal" class="font-semibold text-slate-800">Dewasa</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="placeholderTB" class="text-center py-12 text-slate-400">
+                            <i class="fa-solid fa-calculator text-4xl mb-3 opacity-40"></i>
+                            <p class="text-sm">Masukkan tinggi badan Anda saat ini untuk melihat hasil perhitungan ideal.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB CONTENT 2: BERAT BADAN IDEAL & BMI -->
+        <section id="content-bmi" class="tab-content hidden animate-fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-teal-100 text-teal-600 rounded-xl">
+                            <i class="fa-solid fa-weight-scale text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Cek Berat Badan & BMI</h2>
+                            <p class="text-xs text-slate-500">Hitung Indeks Massa Tubuh (IMT) & rumus Broca</p>
+                        </div>
+                    </div>
+
+                    <form id="formBMI" onsubmit="calculateBMI(event)" class="space-y-4 mt-6">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tinggi Badan (cm)</label>
+                            <input type="number" id="inputBMITB" required min="50" max="250" placeholder="Contoh: 170" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Berat Badan (kg)</label>
+                            <input type="number" id="inputBMIBB" required min="20" max="300" step="0.1" placeholder="Contoh: 65" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-md transition-all">
+                            Hitung BMI & Berat Ideal
+                        </button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">Hasil Indeks Massa Tubuh (BMI)</h3>
+                    
+                    <div id="resultBMI" class="hidden space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-teal-50 border border-teal-100 rounded-2xl p-5 text-center">
+                                <p class="text-xs font-medium text-teal-600">Skor BMI Anda</p>
+                                <p id="bmiScore" class="text-3xl font-extrabold text-teal-900 my-1">22.5</p>
+                                <span id="bmiCategoryBadge" class="inline-block px-3 py-1 bg-teal-200 text-teal-800 text-xs font-bold rounded-full">Normal</span>
+                            </div>
+                            <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 text-center">
+                                <p class="text-xs font-medium text-emerald-600">Berat Badan Ideal (Rumus Broca)</p>
+                                <p id="idealBBVal" class="text-3xl font-extrabold text-emerald-900 my-1">63 kg</p>
+                                <p class="text-xs text-emerald-700">Estimasi optimal untuk jenis kelamin Anda</p>
+                            </div>
+                        </div>
+
+                        <!-- Progress indicator bar for BMI -->
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-500 mb-1">
+                                <span>Kurus (&lt;18.5)</span>
+                                <span>Normal (18.5-24.9)</span>
+                                <span>Gemuk (25-29.9)</span>
+                                <span>Obesitas (&ge;30)</span>
+                            </div>
+                            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex">
+                                <div class="h-full bg-blue-400 w-[20%]"></div>
+                                <div class="h-full bg-emerald-500 w-[30%]"></div>
+                                <div class="h-full bg-amber-400 w-[25%]"></div>
+                                <div class="h-full bg-rose-500 w-[25%]"></div>
+                            </div>
+                        </div>
+
+                        <div id="bmiAdvice" class="p-4 bg-slate-50 rounded-xl text-sm text-slate-600 border border-slate-200">
+                            <strong>Saran Kesehatan:</strong> Berat badan Anda berada dalam kategori sehat. Pertahankan pola makan seimbang dan olahraga teratur.
+                        </div>
+                    </div>
+
+                    <div id="placeholderBMI" class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-weight-scale text-4xl mb-3 opacity-40"></i>
+                        <p class="text-sm">Isi tinggi dan berat badan Anda untuk menghitung status nutrisi & BMI.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB CONTENT 3: KALORI HARIAN (BMR & TDEE) -->
+        <section id="content-kalori" class="tab-content hidden animate-fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-orange-100 text-orange-600 rounded-xl">
+                            <i class="fa-solid fa-fire-flame-curved text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Kalkulator Kalori Harian</h2>
+                            <p class="text-xs text-slate-500">Hitung BMR & Total Energi Harian (TDEE)</p>
+                        </div>
+                    </div>
+
+                    <form id="formKalori" onsubmit="calculateCalories(event)" class="space-y-4 mt-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Tinggi (cm)</label>
+                                <input type="number" id="inputKaloriTB" required min="50" max="250" placeholder="170" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Berat (kg)</label>
+                                <input type="number" id="inputKaloriBB" required min="20" max="300" placeholder="65" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tingkat Aktivitas Fisik</label>
+                            <select id="inputActivity" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                                <option value="1.2">Jarang / Tidak Pernah Olahraga</option>
+                                <option value="1.375">Aktivitas Ringan (Olahraga 1-3 hari/minggu)</option>
+                                <option value="1.55">Aktivitas Sedang (Olahraga 3-5 hari/minggu)</option>
+                                <option value="1.725">Sangat Aktif (Olahraga 6-7 hari/minggu)</option>
+                                <option value="1.9">Ekstra Aktif (Pekerja Fisik / Atlet)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl shadow-md transition-all">
+                            Hitung Kebutuhan Kalori
+                        </button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">Hasil Kebutuhan Energi Harian</h3>
+
+                    <div id="resultKalori" class="hidden space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-orange-50 border border-orange-100 rounded-2xl p-5">
+                                <div class="flex items-center gap-2 text-orange-600 text-xs font-semibold uppercase">
+                                    <i class="fa-solid fa-heart"></i> BMR (Basal Metabolic Rate)
+                                </div>
+                                <p id="bmrVal" class="text-3xl font-extrabold text-orange-900 my-2">1,600 Kkal</p>
+                                <p class="text-xs text-orange-700">Kalori minimal yang dibutuhkan tubuh saat istirahat total.</p>
+                            </div>
+                            <div class="bg-amber-50 border border-amber-100 rounded-2xl p-5">
+                                <div class="flex items-center gap-2 text-amber-600 text-xs font-semibold uppercase">
+                                    <i class="fa-solid fa-bolt"></i> TDEE (Kebutuhan Harian)
+                                </div>
+                                <p id="tdeeVal" class="text-3xl font-extrabold text-amber-900 my-2">2,200 Kkal</p>
+                                <p class="text-xs text-amber-700">Kalori harian untuk mempertahankan berat badan saat ini.</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Panduan Target Berat Badan:</h4>
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                    <p class="text-xs text-slate-500">Turun Berat</p>
+                                    <p id="calorieCut" class="font-bold text-slate-800 text-sm mt-1">1,700 Kkal</p>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                    <p class="text-xs text-slate-500">Pertahankan</p>
+                                    <p id="calorieMaintain" class="font-bold text-slate-800 text-sm mt-1">2,200 Kkal</p>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                    <p class="text-xs text-slate-500">Naik Berat</p>
+                                    <p id="calorieBulk" class="font-bold text-slate-800 text-sm mt-1">2,700 Kkal</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="placeholderKalori" class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-fire text-4xl mb-3 opacity-40"></i>
+                        <p class="text-sm">Isi parameter di atas untuk mengetahui BMR & batas kebutuhan kalori harian Anda.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB CONTENT 4: MASA SUBUR -->
+        <section id="content-subur" class="tab-content hidden animate-fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-pink-100 text-pink-600 rounded-xl">
+                            <i class="fa-solid fa-calendar-heart text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Kalkulator Masa Subur</h2>
+                            <p class="text-xs text-slate-500">Estimasi puncak ovulasi & periode subur wanita</p>
+                        </div>
+                    </div>
+
+                    <form id="formSubur" onsubmit="calculateFertility(event)" class="space-y-4 mt-6">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Hari Pertama Haid Terakhir (HPHT)</label>
+                            <input type="date" id="inputHPHT" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Rata-rata Siklus Haid (Hari)</label>
+                            <input type="number" id="inputCycle" required min="20" max="45" value="28" placeholder="Umumnya 28 hari" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-xl shadow-md transition-all">
+                            Hitung Masa Subur
+                        </button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">Hasil Estimasi Siklus</h3>
+
+                    <div id="resultSubur" class="hidden space-y-6">
+                        <div class="bg-pink-50 border border-pink-100 rounded-2xl p-6 text-center">
+                            <p class="text-xs font-medium text-pink-600 mb-1">Puncak Hari Ovulasi / Masa Subur Utama</p>
+                            <p id="ovulationDateVal" class="text-2xl font-extrabold text-pink-900">14 Oktober 2026</p>
+                            <p class="text-xs text-pink-700 mt-1">Kemungkinan besar pelepasan sel telur terjadi pada tanggal ini.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <p class="text-xs text-slate-500">Jendela Masa Subur</p>
+                                <p id="fertileWindowVal" class="text-base font-bold text-slate-800 mt-1">11 - 16 Oktober 2026</p>
+                                <p class="text-xs text-slate-500 mt-1">Rentang waktu terbaik jika merencanakan kehamilan.</p>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <p class="text-xs text-slate-500">Estimasi Haid Berikutnya</p>
+                                <p id="nextPeriodVal" class="text-base font-bold text-slate-800 mt-1">28 Oktober 2026</p>
+                                <p class="text-xs text-slate-500 mt-1">Awal dari siklus haid baru berikutnya.</p>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-slate-400 italic text-center">*Catatan: Kalkulator ini berbasis statistik siklus teratur dan sebaiknya digunakan sebagai panduan awal umum.</p>
+                    </div>
+
+                    <div id="placeholderSubur" class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-calendar-days text-4xl mb-3 opacity-40"></i>
+                        <p class="text-sm">Pilih tanggal HPHT dan durasi siklus untuk melihat estimasi masa subur.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB CONTENT 5: TES KEWARASAN / KESEHATAN MENTAL (15 SOAL) -->
+        <section id="content-mental" class="tab-content hidden animate-fade-in">
+            <div class="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-purple-100 text-purple-600 rounded-xl">
+                            <i class="fa-solid fa-brain text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Tes Kewarasan & Tingkat Stress Mental</h2>
+                            <p class="text-xs text-slate-500">Jawab 15 pertanyaan berikut sesuai perasaan Anda dalam 2 minggu terakhir</p>
+                        </div>
+                    </div>
+                    <span id="quizProgress" class="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-full border border-purple-100">
+                        0 / 15 Terjawab
+                    </span>
+                </div>
+
+                <form id="quizForm" onsubmit="calculateMentalHealth(event)" class="space-y-6">
+                    <div id="quizQuestionsContainer" class="space-y-6">
+                        <!-- Questions will be injected dynamically via JS -->
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex justify-end">
+                        <button type="submit" class="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-square-check"></i>
+                            <span>Lihat Hasil Evaluasi</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Mental Health Result Section -->
+                <div id="resultMental" class="hidden mt-8 pt-8 border-t border-slate-200 animate-fade-in">
+                    <div class="text-center max-w-xl mx-auto mb-8">
+                        <div id="mentalBadgeIcon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3">
+                            <i class="fa-solid fa-smile"></i>
+                        </div>
+                        <h3 class="text-xs uppercase font-bold tracking-widest text-slate-400">Hasil Evaluasi Kesehatan Mental</h3>
+                        <p id="mentalScoreText" class="text-4xl font-extrabold my-2 text-slate-800">Skor: 12 / 45</p>
+                        <h4 id="mentalCategory" class="text-xl font-bold text-emerald-600">Kondisi Mental Stabil & Sehat</h4>
+                        <p id="mentalDescription" class="text-sm text-slate-600 mt-2">
+                            Anda menunjukkan kondisi emosional yang baik dan tingkat stres yang terkelola dengan sangat baik. Pertahankan pola hidup sehat ini.
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-500 leading-relaxed text-center">
+                        <p><i class="fa-solid fa-circle-info mr-1 text-purple-600"></i> <strong>Disclaimer:</strong> Tes ini merupakan alat skrining mandiri sederhana dan tidak menggantikan diagnosis medis resmi dari psikolog atau psikiater profesional.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- GLOBAL USER STATE ---
+        let currentUser = {
+            name: '',
+            age: 0,
+            gender: 'pria'
+        };
+
+        // --- MENTAL HEALTH QUIZ QUESTIONS (15 QUESTIONS) ---
+        const mentalQuestions = [
+            "Saya merasa sulit untuk rileks atau bersantai.",
+            "Saya merasa cemas atau takut tanpa alasan yang jelas.",
+            "Saya merasa kehilangan minat pada hal-hal yang biasanya saya nikmati.",
+            "Saya sering merasa lelah atau kekurangan energi tanpa alasan fisik.",
+            "Saya merasa tidak berharga atau menyalahkan diri sendiri secara berlebihan.",
+            "Saya mengalami gangguan tidur (susah tidur atau tidur berlebihan).",
+            "Saya merasa mudah marah, tersinggung, atau frustrasi.",
+            "Saya kesulitan berkonsentrasi saat bekerja atau belajar.",
+            "Saya merasa masa depan saya tampak suram atau tanpa harapan.",
+            "Saya sering merasa panik atau gelisah dalam situasi tertentu.",
+            "Saya cenderung menarik diri dari pergaulan teman atau keluarga.",
+            "Saya merasa beban pikiran saya terlalu berat untuk ditanggung.",
+            "Saya mengalami perubahan nafsu makan yang drastis (drastis turun/naik).",
+            "Saya merasa ragu-ragu dan sulit membuat keputusan sederhana.",
+            "Saya merasa emosi saya tidak stabil atau sering berubah drastis."
+        ];
+
+        // --- INITIALIZATION ON LOAD ---
+        window.onload = function() {
+            renderQuizQuestions();
+            checkSavedUser();
+        };
+
+        // Render 15 Questions into DOM
+        function renderQuizQuestions() {
+            const container = document.getElementById('quizQuestionsContainer');
+            if (!container) return;
+
+            const options = [
+                { label: "Tidak Pernah", value: 0 },
+                { label: "Kadang-kadang", value: 1 },
+                { label: "Sering", value: 2 },
+                { label: "Hampir Selalu", value: 3 }
+            ];
+
+            let html = '';
+            mentalQuestions.forEach((q, idx) => {
+                const qNum = idx + 1;
+                html += `
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/80 hover:border-slate-300 transition-all">
+                        <p class="text-sm font-semibold text-slate-800 mb-3">
+                            <span class="text-purple-600 font-bold mr-1">${qNum}.</span> ${q}
+                        </p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            ${options.map(opt => `
+                                <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:bg-purple-50/50 transition-colors">
+                                    <input type="radio" name="q_${idx}" value="${opt.value}" onchange="updateQuizProgress()" required class="text-purple-600 focus:ring-purple-500">
+                                    <span class="text-xs font-medium text-slate-700">${opt.label}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- LOGIN & USER MANAGEMENT ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const name = document.getElementById('inputName').value.trim();
+            const age = parseInt(document.getElementById('inputAge').value);
+            const gender = document.getElementById('inputGender').value;
+
+            if (!name || isNaN(age)) return;
+
+            currentUser = { name, age, gender };
+            
+            // Save to localStorage
+            localStorage.setItem('cekkes_user', JSON.stringify(currentUser));
+
+            updateUserUI();
+            
+            // Hide login modal
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+        }
+
+        function checkSavedUser() {
+            const saved = localStorage.getItem('cekkes_user');
+            if (saved) {
+                try {
+                    currentUser = JSON.parse(saved);
+                    updateUserUI();
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('mainContent').classList.remove('hidden');
+                } catch (e) {
+                    console.error("Failed parsing saved user", e);
+                }
+            }
+        }
+
+        function updateUserUI() {
+            document.getElementById('navUserName').textContent = currentUser.name;
+            document.getElementById('navUserMeta').textContent = `${currentUser.age} Thn • ${currentUser.gender === 'pria' ? 'Laki-Laki' : 'Perempuan'}`;
+            document.getElementById('userProfileHeader').classList.remove('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem('cekkes_user');
+            location.reload();
+        }
+
+        // --- TAB NAVIGATION ---
+        function switchTab(tabKey) {
+            const tabs = ['tb', 'bmi', 'kalori', 'subur', 'mental'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const content = document.getElementById(`content-${t}`);
+                if (t === tabKey) {
+                    btn.classList.add('tab-active');
+                    btn.classList.remove('text-slate-500');
+                    content.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('text-slate-500');
+                    content.classList.add('hidden');
+                }
+            });
+        }
+
+        // --- 1. TINGGI BADAN IDEAL CALCULATOR ---
+        function calculateIdealTB(e) {
+            e.preventDefault();
+            const actualTB = parseFloat(document.getElementById('inputTBActual').value);
+            if (!actualTB) return;
+
+            const age = currentUser.age;
+            const gender = currentUser.gender;
+
+            let minIdeal, maxIdeal;
+            let groupLabel = "Dewasa";
+
+            // Calculation based on age group & sex standard estimates
+            if (age < 18) {
+                groupLabel = "Anak / Remaja Masa Pertumbuhan";
+                if (gender === 'pria') {
+                    minIdeal = Math.round(80 + (age * 5));
+                    maxIdeal = minIdeal + 12;
+                } else {
+                    minIdeal = Math.round(78 + (age * 4.8));
+                    maxIdeal = minIdeal + 10;
+                }
+            } else {
+                groupLabel = "Dewasa";
+                // Estimate range based on average adult standards
+                if (gender === 'pria') {
+                    minIdeal = 162;
+                    maxIdeal = 178;
+                } else {
+                    minIdeal = 152;
+                    maxIdeal = 166;
+                }
+            }
+
+            let statusText = "";
+            if (actualTB < minIdeal) {
+                statusText = "Tinggi badan Anda sedikit di bawah rentang rata-rata ideal.";
+            } else if (actualTB > maxIdeal) {
+                statusText = "Tinggi badan Anda di atas rentang rata-rata ideal (Tinggi).";
+            } else {
+                statusText = "Tinggi badan Anda berada dalam rentang ideal yang sangat baik!";
+            }
+
+            document.getElementById('idealTBRange').textContent = `${minIdeal} - ${maxIdeal} cm`;
+            document.getElementById('tbStatus').textContent = statusText;
+            document.getElementById('currentTBVal').textContent = `${actualTB} cm`;
+            document.getElementById('ageGroupVal').textContent = groupLabel;
+
+            document.getElementById('placeholderTB').classList.add('hidden');
+            document.getElementById('resultTB').classList.remove('hidden');
+        }
+
+        // --- 2. BMI & IDEAL WEIGHT CALCULATOR ---
+        function calculateBMI(e) {
+            e.preventDefault();
+            const tb = parseFloat(document.getElementById('inputBMITB').value);
+            const bb = parseFloat(document.getElementById('inputBMIBB').value);
+
+            if (!tb || !bb) return;
+
+            const heightInMeters = tb / 100;
+            const bmi = (bb / (heightInMeters * heightInMeters)).toFixed(1);
+
+            // Broca Formula for Ideal Weight
+            let idealBB = 0;
+            if (currentUser.gender === 'pria') {
+                idealBB = (tb - 100) - ((tb - 100) * 0.10);
+            } else {
+                idealBB = (tb - 100) - ((tb - 100) * 0.15);
+            }
+
+            if (tb < 100) idealBB = tb - 100 > 0 ? tb - 100 : bb; // fallback for short height
+
+            // Category & Advice
+            let category = "";
+            let badgeClass = "";
+            let advice = "";
+
+            if (bmi < 18.5) {
+                category = "Kekurangan Berat (Kurus)";
+                badgeClass = "bg-blue-100 text-blue-800";
+                advice = "Disarankan untuk meningkatkan asupan nutrisi padat gizi dan menambah jumlah kalori harian secara bertahap.";
+            } else if (bmi >= 18.5 && bmi <= 24.9) {
+                category = "Berat Badan Normal (Sehat)";
+                badgeClass = "bg-emerald-100 text-emerald-800";
+                advice = "Selamat! Berat badan Anda sudah tergolong normal dan ideal. Pertahankan pola makan sehat dan rutinitas olahraga.";
+            } else if (bmi >= 25 && bmi <= 29.9) {
+                category = "Kelebihan Berat (Gemuk)";
+                badgeClass = "bg-amber-100 text-amber-800";
+                advice = "Disarankan untuk membatasi konsumsi gula/lemak berlebih dan meningkatkan aktivitas fisik harian.";
+            } else {
+                category = "Obesitas";
+                badgeClass = "bg-rose-100 text-rose-800";
+                advice = "Sebaiknya konsultasikan dengan tenaga kesehatan atau ahli gizi untuk mengatur pola defisit kalori yang aman.";
+            }
+
+            document.getElementById('bmiScore').textContent = bmi;
+            const badgeEl = document.getElementById('bmiCategoryBadge');
+            badgeEl.textContent = category;
+            badgeEl.className = `inline-block px-3 py-1 text-xs font-bold rounded-full ${badgeClass}`;
+
+            document.getElementById('idealBBVal').textContent = `${idealBB.toFixed(1)} kg`;
+            document.getElementById('bmiAdvice').innerHTML = `<strong>Saran Kesehatan:</strong> ${advice}`;
+
+            document.getElementById('placeholderBMI').classList.add('hidden');
+            document.getElementById('resultBMI').classList.remove('hidden');
+        }
+
+        // --- 3. CALORIE CALCULATOR (BMR & TDEE) ---
+        function calculateCalories(e) {
+            e.preventDefault();
+            const tb = parseFloat(document.getElementById('inputKaloriTB').value);
+            const bb = parseFloat(document.getElementById('inputKaloriBB').value);
+            const activity = parseFloat(document.getElementById('inputActivity').value);
+
+            if (!tb || !bb || !activity) return;
+
+            const age = currentUser.age;
+            const gender = currentUser.gender;
+
+            // Mifflin-St Jeor Formula
+            let bmr = (10 * bb) + (6.25 * tb) - (5 * age);
+            if (gender === 'pria') {
+                bmr += 5;
+            } else {
+                bmr -= 161;
+            }
+
+            const tdee = bmr * activity;
+
+            document.getElementById('bmrVal').textContent = `${Math.round(bmr).toLocaleString()} Kkal`;
+            document.getElementById('tdeeVal').textContent = `${Math.round(tdee).toLocaleString()} Kkal`;
+
+            document.getElementById('calorieCut').textContent = `${Math.round(tdee - 500).toLocaleString()} Kkal`;
+            document.getElementById('calorieMaintain').textContent = `${Math.round(tdee).toLocaleString()} Kkal`;
+            document.getElementById('calorieBulk').textContent = `${Math.round(tdee + 500).toLocaleString()} Kkal`;
+
+            document.getElementById('placeholderKalori').classList.add('hidden');
+            document.getElementById('resultKalori').classList.remove('hidden');
+        }
+
+        // --- 4. FERTILITY CALCULATOR ---
+        function calculateFertility(e) {
+            e.preventDefault();
+            const hphtVal = document.getElementById('inputHPHT').value;
+            const cycleDays = parseInt(document.getElementById('inputCycle').value);
+
+            if (!hphtVal || !cycleDays) return;
+
+            const hphtDate = new Date(hphtVal);
+
+            // Ovulation typically occurs ~14 days before the next period
+            const nextPeriodDate = new Date(hphtDate);
+            nextPeriodDate.setDate(hphtDate.getDate() + cycleDays);
+
+            const ovulationDate = new Date(nextPeriodDate);
+            ovulationDate.setDate(nextPeriodDate.getDate() - 14);
+
+            const startFertile = new Date(ovulationDate);
+            startFertile.setDate(ovulationDate.getDate() - 3);
+
+            const endFertile = new Date(ovulationDate);
+            endFertile.setDate(ovulationDate.getDate() + 2);
+
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+
+            document.getElementById('ovulationDateVal').textContent = ovulationDate.toLocaleDateString('id-ID', options);
+            document.getElementById('fertileWindowVal').textContent = `${startFertile.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - ${endFertile.toLocaleDateString('id-ID', options)}`;
+            document.getElementById('nextPeriodVal').textContent = nextPeriodDate.toLocaleDateString('id-ID', options);
+
+            document.getElementById('placeholderSubur').classList.add('hidden');
+            document.getElementById('resultSubur').classList.remove('hidden');
+        }
+
+        // --- 5. MENTAL HEALTH QUIZ ---
+        function updateQuizProgress() {
+            let answered = 0;
+            for (let i = 0; i < mentalQuestions.length; i++) {
+                const checked = document.querySelector(`input[name="q_${i}"]:checked`);
+                if (checked) answered++;
+            }
+            document.getElementById('quizProgress').textContent = `${answered} / 15 Terjawab`;
+        }
+
+        function calculateMentalHealth(e) {
+            e.preventDefault();
+            let totalScore = 0;
+
+            for (let i = 0; i < mentalQuestions.length; i++) {
+                const selected = document.querySelector(`input[name="q_${i}"]:checked`);
+                if (selected) {
+                    totalScore += parseInt(selected.value);
+                }
+            }
+
+            const maxScore = mentalQuestions.length * 3; // 15 * 3 = 45
+            
+            let category = "";
+            let description = "";
+            let iconClass = "";
+            let colorClass = "";
+
+            if (totalScore <= 10) {
+                category = "Kondisi Mental Sangat Baik & Stabil";
+                description = "Anda memiliki tingkat kesehatan emosional yang prima. Mampu mengelola tekanan hidup harian secara sangat sehat.";
+                iconClass = "fa-solid fa-face-smile bg-emerald-100 text-emerald-600";
+                colorClass = "text-emerald-600";
+            } else if (totalScore <= 20) {
+                category = "Stres Ringan (Kondisi Normal)";
+                description = "Anda mengalami sedikit tekanan atau beban mental yang masih dalam batas normal kehidupan wajar. Istirahat cukup akan membantu.";
+                iconClass = "fa-solid fa-face-meh bg-blue-100 text-blue-600";
+                colorClass = "text-blue-600";
+            } else if (totalScore <= 32) {
+                category = "Stres Sedang / Kelelahan Mental (Burnout)";
+                description = "Anda terindikasi mengalami kelelahan emosional atau tekanan emosi sedang. Luangkan waktu untuk relaksasi, hobi, dan cerita ke orang terpercaya.";
+                iconClass = "fa-solid fa-face-frown bg-amber-100 text-amber-600";
+                colorClass = "text-amber-600";
+            } else {
+                category = "Tingkat Stres Tinggi / Indikasi Beban Berat";
+                description = "Hasil menunjukkan tingkat ketegangan emosional yang tergolong tinggi. Sangat disarankan untuk berkonsultasi dengan profesional psikolog/psikiater.";
+                iconClass = "fa-solid fa-face-sad-tear bg-rose-100 text-rose-600";
+                colorClass = "text-rose-600";
+            }
+
+            document.getElementById('mentalScoreText').textContent = `Skor: ${totalScore} / ${maxScore}`;
+            
+            const categoryEl = document.getElementById('mentalCategory');
+            categoryEl.textContent = category;
+            categoryEl.className = `text-xl font-bold ${colorClass}`;
+
+            document.getElementById('mentalDescription').textContent = description;
+
+            const iconBadge = document.getElementById('mentalBadgeIcon');
+            iconBadge.className = `w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 ${iconClass}`;
+
+            document.getElementById('resultMental').classList.remove('hidden');
+
+            // Scroll smoothly to results
+            document.getElementById('resultMental').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
